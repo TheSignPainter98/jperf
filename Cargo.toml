@@ -3,7 +3,7 @@ name = "jperf"
 authors = [ "kcza", "solmyrcan" ]
 description = "A CLI for monitoring juju"
 license = "GPL-3.0-or-later"
-readme = "REDME.md"
+readme = "README.md"
 version = "0.1.0"
 edition = "2021"
 

@@ -11,3 +11,8 @@ Cargo.lock
 
 # vim things
 .*.swp
+
+
+# Added by cargo
+
+/target

@@ -3,32 +3,28 @@ use clap::Parser;
 #[derive(Parser, Debug, Default)]
 #[command(author, version, about, long_about = None, name = "jperf")]
 pub struct Args {
-	/// Application name
-	#[arg(long)]
+	/// Filter results to just one app to monitor
+	#[arg(long, value_name = "application name")]
 	app: Option<String>,
 
-	/// Cloud name
-	#[arg(long)]
+	/// Specify the Juju cloud where apps to monitor are deployed at
+	#[arg(long, value_name = "Juju cloud substrate")]
 	cloud: Option<String>,
 
-	/// Unit name
-	#[arg(long)]
+	/// Specify a single application unit to monitor
+	#[arg(long, value_name = "application unit name")]
 	unit: Option<String>,
 
-	/// Model name
-	#[arg(long)]
+	/// Specify the Juju model name where apps to monitor are at
+	#[arg(long, value_name = "Juju model")]
 	model: Option<String>,		
 
-	/// Display a large set of metrics
-	#[arg(short, long)]
-	verbose: bool,
-
-	/// Optional choice of a single metric to display
-	#[arg(short, long)]
+	/// Specify a single metric to display
+	#[arg(short, value_name = "metric name")]
 	metric: Option<String>,	
 	
-	/// Most recent time interval in milliseconds
-	#[arg(long, default_value_t = 1000)]
+	/// Most recent time window in milliseconds to display
+	#[arg(long, default_value_t = 1000, value_name = "time interval")]
 	interval: u32,
 }
 
@@ -59,29 +55,8 @@ impl Args {
 	}
 
 	#[allow(dead_code)]
-	fn is_verbose(&self) -> &bool {
-		&self.verbose
-	}
-	
-	#[allow(dead_code)]
 	fn interval(&self) -> &u32 {
 		&self.interval
-	}
-
-	#[allow(dead_code)]
-	fn entity_as_string(&self, entity : &str) -> String {		
-		let field : &Option<String> = match entity {
-			"cloud" => self.cloud(),
-			"model" => self.model(),
-			"app" => self.app(),
-			"unit" => self.unit(),
-			&_ => todo!(),
-		};
-
-		match field {
-			None => "".to_string(),
-			Some(n) => n.to_string(),
-		}
 	}
 
 	#[allow(dead_code)]
@@ -94,23 +69,39 @@ impl Args {
 }
 
 #[cfg(test)]
+impl Args {
+	#[allow(dead_code)]
+	fn entity_as_string(&self, entity : &str) -> &Option<String> {		
+		match entity {
+			"cloud" => self.cloud(),
+			"model" => self.model(),
+			"app" => self.app(),
+			"unit" => self.unit(),
+			&_ => &None,
+		}
+	}
+}
+
+#[cfg(test)]
 mod test_valid {
 	use super::*;	
 
 	fn entity_test_args(entity : &str) -> Args {
-		let entity_option : String = "--".to_string() + entity;
-		let result = Args::try_parse_from(["jperf", entity_option.as_str(), "baz"]);
+		let result = Args::try_parse_from(["jperf", &format!("--{entity}"), "baz"]);
 		assert_eq!(result.is_ok(), true);
 		result.unwrap_or_default()
 	}
 	
 	fn entity_name(entity : &str) -> String {
 		let args = entity_test_args(entity);
-		args.entity_as_string(entity)
+		match args.entity_as_string(entity) {
+			None => "".to_string(),
+			Some(n) => n.to_string(),
+		}
 	}
 
 	fn test_entity_name(entity : &str) {
-		let result : String = entity_name(entity);
+		let result = entity_name(entity);
 		assert_eq!("baz", result.as_str());
 	}
 
@@ -122,4 +113,3 @@ mod test_valid {
 		}
 	}	
 }
-

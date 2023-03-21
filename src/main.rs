@@ -8,5 +8,3 @@ fn main() {
     let args = Args::parse();
     println!("{args:?}");
 }
-
-

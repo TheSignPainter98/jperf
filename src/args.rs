@@ -3,55 +3,55 @@ use clap::Parser;
 #[derive(Parser, Debug, Default)]
 #[command(author, version, about, long_about = None, name = "jperf")]
 pub struct Args {
-	/// Filter results to just one app to monitor
-	#[arg(long, value_name = "application name")]
+	/// Specify a single app to monitor
+	#[arg(long, value_name = "name")]
 	app: Option<String>,
 
-	/// Specify the Juju cloud where apps to monitor are deployed at
-	#[arg(long, value_name = "Juju cloud substrate")]
+	/// Specify a single cloud to monitor
+	#[arg(long, value_name = "name")]
 	cloud: Option<String>,
 
-	/// Specify a single application unit to monitor
-	#[arg(long, value_name = "application unit name")]
+	/// Specify a single app unit to monitor
+	#[arg(long, value_name = "name")]
 	unit: Option<String>,
 
-	/// Specify the Juju model name where apps to monitor are at
-	#[arg(long, value_name = "Juju model")]
+	/// Specify a single model to monitor
+	#[arg(long, value_name = "name")]
 	model: Option<String>,		
 
 	/// Specify a single metric to display
-	#[arg(short, value_name = "metric name")]
+	#[arg(short, value_name = "name")]
 	metric: Option<String>,	
 	
 	/// Most recent time window in milliseconds to display
-	#[arg(long, default_value_t = 1000, value_name = "time interval")]
+	#[arg(long, default_value_t = 1000, value_name = "milliseconds")]
 	interval: u32,
 }
 
 impl Args {
 	#[allow(dead_code)]
-	fn app(&self) -> &Option<String>{
-		&self.app
+	fn app(&self) -> Option<&str>{
+		self.app.as_deref()
 	}
 
 	#[allow(dead_code)]
-	fn unit(&self) -> &Option<String>{
-		&self.unit
+	fn unit(&self) -> Option<&str>{
+		self.unit.as_deref()
 	}
 	
 	#[allow(dead_code)]
-	fn model(&self) -> &Option<String>{
-		&self.model
+	fn model(&self) -> Option<&str>{
+		self.model.as_deref()
 	}
 
 	#[allow(dead_code)]
-	fn cloud(&self) -> &Option<String>{
-		&self.cloud
+	fn cloud(&self) -> Option<&str>{
+		self.cloud.as_deref()
 	}
 
 	#[allow(dead_code)]
-	fn metric(&self) -> &Option<String>{
-		&self.metric
+	fn metric(&self) -> Option<&str>{
+		self.metric.as_deref()
 	}
 
 	#[allow(dead_code)]
@@ -71,13 +71,13 @@ impl Args {
 #[cfg(test)]
 impl Args {
 	#[allow(dead_code)]
-	fn entity_as_string(&self, entity : &str) -> &Option<String> {		
+	fn entity_as_string(&self, entity : &str) -> Option<&str> {		
 		match entity {
 			"cloud" => self.cloud(),
 			"model" => self.model(),
 			"app" => self.app(),
 			"unit" => self.unit(),
-			&_ => &None,
+			_ => None,
 		}
 	}
 }
@@ -86,30 +86,19 @@ impl Args {
 mod test_valid {
 	use super::*;	
 
-	fn entity_test_args(entity : &str) -> Args {
-		let result = Args::try_parse_from(["jperf", &format!("--{entity}"), "baz"]);
-		assert_eq!(result.is_ok(), true);
-		result.unwrap_or_default()
-	}
-	
-	fn entity_name(entity : &str) -> String {
-		let args = entity_test_args(entity);
-		match args.entity_as_string(entity) {
-			None => "".to_string(),
-			Some(n) => n.to_string(),
-		}
-	}
-
-	fn test_entity_name(entity : &str) {
-		let result = entity_name(entity);
-		assert_eq!("baz", result.as_str());
-	}
-
 	#[test]
-	fn test_entity_names() {
-		let entities = ["cloud", "model", "app", "unit"];
-		for entity in entities {
-			test_entity_name(entity);
+	fn test_entity_flags() {
+		for entity in ["cloud", "model", "app", "unit"] {
+			let result = Args::try_parse_from(["jperf", &format!("{entity}"), "baz"]);
+			assert_eq!(result.is_ok(), true);
+			
+			let args = result.unwrap_or_default();
+			let result = match args.entity_as_string(entity) {
+				None => "".to_string(),
+				Some(n) => n.to_string(),
+			};
+			
+			assert_eq!("baz", result.as_str());
 		}
 	}	
 }
